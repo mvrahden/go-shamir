@@ -1,0 +1,2 @@
+# go-shamir
+Secret sharing
