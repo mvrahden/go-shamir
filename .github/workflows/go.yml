@@ -1,0 +1,79 @@
+name: Go
+
+on:
+  release:
+    types: [published]
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {GOOS: linux, GOARCH: amd64}
+          - {GOOS: linux, GOARCH: arm, GOARM: 6}
+          - {GOOS: linux, GOARCH: arm64}
+          - {GOOS: darwin, GOARCH: amd64}
+          - {GOOS: darwin, GOARCH: arm64}
+          - {GOOS: windows, GOARCH: amd64}
+          - {GOOS: freebsd, GOARCH: amd64}
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build binary
+        run: make build
+
+      - name: Test binary
+        run: make test
+
+      - name: Package binary
+        run: |
+          VERSION="$(git describe --tags)"
+          DIR=bin
+          if [ "$GOOS" == "windows" ]; then
+            mv "$DIR/shamir" "shamir-$VERSION-$GOOS-$GOARCH.zip"
+          else
+            tar -cvzf "shamir-$VERSION-$GOOS-$GOARCH.tar.gz" -C "$DIR" shamir
+          fi
+
+        env:
+          GOOS: ${{ matrix.GOOS }}
+          GOARCH: ${{ matrix.GOARCH }}
+          GOARM: ${{ matrix.GOARM }}
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shamir-binaries-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
+          path: shamir-*
+
+  upload:
+    name: Upload release binaries
+    if: github.event_name == 'release'
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: shamir-binaries-*
+          merge-multiple: true
+      - name: Upload release artifacts
+        run: gh release upload "$GITHUB_REF_NAME" shamir-*
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
