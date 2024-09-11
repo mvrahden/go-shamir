@@ -7,7 +7,7 @@ dep:
 	go mod verify
 
 build: dep
-	go build -o bin/shamir cli/main.go
+	go build -a -ldflags="-w -s" -o ./bin/shamir ./cmd/shamir/.
 
 .PHONY: build
 

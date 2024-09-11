@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -11,6 +11,10 @@ var cfgFile string
 
 var RootCmd = &cobra.Command{
 	Use: "shamir",
+}
+
+func main() {
+	Execute()
 }
 
 func Execute() {

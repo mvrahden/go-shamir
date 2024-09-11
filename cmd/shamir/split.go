@@ -1,8 +1,8 @@
-package cmd
+package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/hashicorp/vault/shamir"
@@ -28,7 +28,7 @@ func init() {
 }
 
 func runSplit(cmd *cobra.Command, args []string) {
-	secretBuf, err := ioutil.ReadAll(os.Stdin)
+	secretBuf, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read stdin: %v\n", err)
 		os.Exit(1)
