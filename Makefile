@@ -11,7 +11,12 @@ build: dep
 
 .PHONY: build
 
-test: build
+unit:
+	go test ./...
+
+.PHONY: unit
+
+test: unit build
 	./tests/shamir
 
 .PHONY: test

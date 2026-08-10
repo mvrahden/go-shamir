@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/vault/shamir"
+	shamir "github.com/mvrahden/go-shamir"
 	"github.com/spf13/cobra"
 )
 

@@ -8,6 +8,19 @@ on:
   workflow_dispatch:
 jobs:
 
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+      - uses: actions/checkout@v4
+      - name: go vet
+        run: go vet ./...
+      - name: go test
+        run: go test -count=1 ./...
+
   build:
     name: Build binaries
     runs-on: ubuntu-latest
