@@ -182,6 +182,37 @@ func TestSplitsAreNotDeterministic(t *testing.T) {
 	}
 }
 
+// TestPolynomialNotReusedAcrossBytes guards the property that makes a
+// KNOWN-PLAINTEXT secret safe to split.
+//
+// Each byte of the secret must get its own polynomial with its own random
+// coefficients. If one polynomial were hoisted out of the loop and reused,
+// identical plaintext bytes would produce identical share bytes — and then
+// any caller whose plaintext has a predictable prefix (a format header, a
+// magic number, a fixed field) would leak it into the rest of the secret.
+//
+// Nothing else in this suite would notice: reconstruction still round-trips
+// perfectly with a reused polynomial. Hence this test.
+func TestPolynomialNotReusedAcrossBytes(t *testing.T) {
+	secret := bytes.Repeat([]byte{'A'}, 64)
+	shares, err := Split(secret, 5, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, share := range shares {
+		body := share[:len(share)-1] // drop the trailing x-coordinate
+		distinct := map[byte]bool{}
+		for _, b := range body {
+			distinct[b] = true
+		}
+		if len(distinct) == 1 {
+			t.Fatalf("share %d: %d identical plaintext bytes produced a constant share body — "+
+				"the polynomial is reused across byte positions, so a known plaintext prefix would leak",
+				i, len(secret))
+		}
+	}
+}
+
 // TestRejectsOutOfRangeParameters: the guards that keep callers out of
 // undefined territory.
 func TestRejectsOutOfRangeParameters(t *testing.T) {
