@@ -11,10 +11,16 @@ jobs:
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The oldest version go.mod claims to support, and the newest. The
+        # first catches stdlib newer than the go directive allows; without
+        # it the claim in go.mod is untested.
+        go-version: ['1.25', 'stable']
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: ${{ matrix.go-version }}
       - uses: actions/checkout@v4
       - name: go vet
         run: go vet ./...
@@ -38,7 +44,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.23
+          go-version: stable
 
       - name: Checkout repository
         uses: actions/checkout@v4
